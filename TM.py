@@ -40,96 +40,60 @@ class SerialPort:
         self.alive = False
         self.read_thread.join()
 
-    # def read_from_port(self):
-    #     global current_sequence, sequence_index, frame_count, need_update_sequence
-    #     threshold1 = 10
-    #     threshold2 = 40
-    #     threshold3 = 60
-    #     while self.alive:
-    #         try:
-    #             data = self.read_ser.readline().decode('utf-8').strip()
-    #             data = literal_eval(data)
-    #             if data:
-    #                 self.data_list.append(statistics.mean(data))
-    #                 if len(self.data_list) == 15:
-    #                     average = sum(self.data_list) / len(self.data_list)
-    #                     print(f"Average: {average}")
-    #                     self.data_list.clear()
-    #                     if average < threshold1 and current_sequence != gifs_sequences['S0']:
-    #                         need_update_sequence = True
-    #                         sequence_to_set = 'S0'
-    #                         self.write_ser.write(b"0")
-    #                     elif threshold1 <= average < threshold2 and current_sequence != gifs_sequences['S1']:
-    #                         need_update_sequence = True
-    #                         sequence_to_set = 'S1'
-    #                         self.write_ser.write(b"1")
-    #                     elif threshold2 <= average < threshold3 and current_sequence != gifs_sequences['S2']:
-    #                         need_update_sequence = True
-    #                         sequence_to_set = 'S2'
-    #                         self.write_ser.write(b"2")
-    #                     elif average >= threshold3 and current_sequence != gifs_sequences['S3']:
-    #                         need_update_sequence = True
-    #                         sequence_to_set = 'S3'
-    #                         self.write_ser.write(b"3")
-    #                     if need_update_sequence:
-    #                         current_sequence = gifs_sequences[sequence_to_set]
-    #                         sequence_index = 0
-    #                         frame_count = 0
-    #                         need_update_sequence = False
-    #                         # Send data to the second serial port
-    #         except ValueError as e:
-    #             print(f"Error parsing data: {e}")
-
     def read_from_port(self):
-    global current_sequence, sequence_index, frame_count, need_update_sequence
-    threshold1 = 10
-    threshold2 = 40
-    threshold3 = 60
-    while self.alive:
+        global current_sequence, sequence_index, frame_count, need_update_sequence
+        threshold1 = 10
+        threshold2 = 40
+        threshold3 = 60
+        while self.alive:
+            try:
+                # 读取数据并解码
+                raw_data = self.read_ser.readline().decode('utf-8').strip()
+                print(f"Raw data: {raw_data}")  # 调试信息
+                
+                # 清理和解析数据
+                data = self.clean_data(raw_data)
+                if data:
+                    self.data_list.append(statistics.mean(data))
+                    if len(self.data_list) == 15:
+                        average = sum(self.data_list) / len(self.data_list)
+                        print(f"Average: {average}")
+                        self.data_list.clear()
+                        if average < threshold1 and current_sequence != gifs_sequences['S0']:
+                            need_update_sequence = True
+                            sequence_to_set = 'S0'
+                            self.write_ser.write(b"0")
+                        elif threshold1 <= average < threshold2 and current_sequence != gifs_sequences['S1']:
+                            need_update_sequence = True
+                            sequence_to_set = 'S1'
+                            self.write_ser.write(b"1")
+                        elif threshold2 <= average < threshold3 and current_sequence != gifs_sequences['S2']:
+                            need_update_sequence = True
+                            sequence_to_set = 'S2'
+                            self.write_ser.write(b"2")
+                        elif average >= threshold3 and current_sequence != gifs_sequences['S3']:
+                            need_update_sequence = True
+                            sequence_to_set = 'S3'
+                            self.write_ser.write(b"3")
+                        if need_update_sequence:
+                            current_sequence = gifs_sequences[sequence_to_set]
+                            sequence_index = 0
+                            frame_count = 0
+                            need_update_sequence = False
+                            # Send data to the second serial port
+            except ValueError as e:
+                print(f"Error parsing data: {e}")
+
+    def clean_data(self, raw_data):
         try:
-            # 读取数据并解码
-            raw_data = self.read_ser.readline().decode('utf-8').strip()
-            print(f"Raw data: {raw_data}")  # 调试信息
-            
-            # 清理和解析数据
-            data = self.clean_data(raw_data)
-            if data:
-                self.data_list.append(statistics.mean(data))
-                if len(self.data_list) == 15:
-                    average = sum(self.data_list) / len(self.data_list)
-                    print(f"Average: {average}")
-                    self.data_list.clear()
-                    if average < threshold1 and current_sequence != gifs_sequences['S0']:
-                        need_update_sequence = True
-                        sequence_to_set = 'S0'
-                        self.write_ser.write(b"0")
-                    elif threshold1 <= average < threshold2 and current_sequence != gifs_sequences['S1']:
-                        need_update_sequence = True
-                        sequence_to_set = 'S1'
-                        self.write_ser.write(b"1")
-                    elif threshold2 <= average < threshold3 and current_sequence != gifs_sequences['S2']:
-                        need_update_sequence = True
-                        sequence_to_set = 'S2'
-                        self.write_ser.write(b"2")
-                    elif average >= threshold3 and current_sequence != gifs_sequences['S3']:
-                        need_update_sequence = True
-                        sequence_to_set = 'S3'
-                        self.write_ser.write(b"3")
-                        # Send data to the second serial port
-        except ValueError as e:
+            # 先进行数据清理，比如去除多余的空格或换行符
+            cleaned_data = raw_data.strip()
+            # 使用 literal_eval 解析数据
+            return literal_eval(cleaned_data)
+        except (ValueError, SyntaxError) as e:
             print(f"Error parsing data: {e}")
-
-def clean_data(self, raw_data):
-    try:
-        # 先进行数据清理，比如去除多余的空格或换行符
-        cleaned_data = raw_data.strip()
-        # 使用 literal_eval 解析数据
-        return literal_eval(cleaned_data)
-    except (ValueError, SyntaxError) as e:
-        print(f"Error parsing data: {e}")
-        print(f"Raw data: {raw_data}")  # 打印原始数据以便调试
-        return None
-
+            print(f"Raw data: {raw_data}")  # 打印原始数据以便调试
+            return None
 
 if __name__ == '__main__':
     serial_port = SerialPort('COM12', 'COM17', 115200)  # Adjust COM ports as needed
