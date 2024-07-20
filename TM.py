@@ -14,6 +14,8 @@ gifs_sequences = {
     'S1': [('Normal-Bored.gif', 23), ('Boredom.gif', 46), ('BoredomN.gif', 1000)],
     'S2': [('Normal-Happiness.gif', 23), ('Happiness.gif', 46), ('HappinessN.gif', 200)],
     'S3': [('Normal-Anger.gif', 23), ('Anger.gif', 64), ('AngerN.gif', 200)],
+    'S4': [('gif',50)],
+    'S5': [('gif',50)]
 }
 
 layout = [[sg.Image(key='-GIF-')]]
@@ -23,6 +25,8 @@ current_sequence = []
 sequence_index = 0
 frame_count = 0
 need_update_sequence = True
+pat_time = 0
+pat_timing = 0
 
 class SerialPort:
     def __init__(self, read_port, write_port, baudrate):
@@ -41,7 +45,7 @@ class SerialPort:
         self.read_thread.join()
 
     def read_from_port(self):
-        global current_sequence, sequence_index, frame_count, need_update_sequence
+        global current_sequence, sequence_index, frame_count, need_update_sequence, pat_time, pat_timing
         threshold1 = 10
         threshold2 = 40
         threshold3 = 60
@@ -60,14 +64,19 @@ class SerialPort:
                         print(f"Average: {average}")
                         self.data_list.clear()
                         if average < threshold1 and current_sequence != gifs_sequences['S0']:
+                            pat_time = 0
+                            pat_timing = 0
                             need_update_sequence = True
                             sequence_to_set = 'S0'
                             self.write_ser.write(b"0")
                         elif threshold1 <= average < threshold2 and current_sequence != gifs_sequences['S1']:
+                            pat_time = 0
+                            pat_timing = 0
                             need_update_sequence = True
                             sequence_to_set = 'S1'
                             self.write_ser.write(b"1")
                         elif threshold2 <= average < threshold3 and current_sequence != gifs_sequences['S2']:
+                            pat_time = 0
                             need_update_sequence = True
                             sequence_to_set = 'S2'
                             self.write_ser.write(b"2")
@@ -75,6 +84,14 @@ class SerialPort:
                             need_update_sequence = True
                             sequence_to_set = 'S3'
                             self.write_ser.write(b"3")
+                        elif average >= threshold3 and pat_time >= 1000 and current_sequence != gifs_sequences['S4']:
+                            need_update_sequence = True
+                            sequence_to_set = 'S4'
+                        elif pat_timing == 2 and current_sequence != gifs_sequences['S5']:
+                            need_update_sequence = True
+                            sequence_to_set = 'S5'
+                        if pat_time >= 100 and current_sequence != gifs_sequences['S3']:
+                            pat_timing += 1
                         if need_update_sequence:
                             current_sequence = gifs_sequences[sequence_to_set]
                             sequence_index = 0
@@ -117,6 +134,8 @@ if __name__ == '__main__':
                         current_sequence = []
                         sequence_index = 0
                         need_update_sequence = True
+                if current_sequence == gifs_sequences['S3']:
+                    pat_time += 1
                 print(frame_count)
     except KeyboardInterrupt:
         print("Stopping program")
