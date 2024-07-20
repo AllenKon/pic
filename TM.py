@@ -63,6 +63,8 @@ class SerialPort:
                         average = sum(self.data_list) / len(self.data_list)
                         print(f"Average: {average}")
                         self.data_list.clear()
+                        if pat_time >= 100 and current_sequence != gifs_sequences['S3']:
+                            pat_timing += 1
                         if average < threshold1 and current_sequence != gifs_sequences['S0']:
                             pat_time = 0
                             pat_timing = 0
@@ -90,8 +92,7 @@ class SerialPort:
                         elif average >= threshold3 and pat_time < 1000 and pat_timing == 2 and current_sequence != gifs_sequences['S5']:
                             need_update_sequence = True
                             sequence_to_set = 'S5'
-                        if pat_time >= 100 and current_sequence != gifs_sequences['S3']:
-                            pat_timing += 1
+                        
                         if need_update_sequence:
                             current_sequence = gifs_sequences[sequence_to_set]
                             sequence_index = 0
