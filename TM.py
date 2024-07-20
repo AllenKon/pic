@@ -80,14 +80,14 @@ class SerialPort:
                             need_update_sequence = True
                             sequence_to_set = 'S2'
                             self.write_ser.write(b"2")
-                        elif average >= threshold3 and current_sequence != gifs_sequences['S3']:
+                        elif average >= threshold3 and current_sequence != gifs_sequences['S3'] and pat_timing != 2:
                             need_update_sequence = True
                             sequence_to_set = 'S3'
                             self.write_ser.write(b"3")
                         elif average >= threshold3 and pat_time >= 1000 and current_sequence != gifs_sequences['S4']:
                             need_update_sequence = True
                             sequence_to_set = 'S4'
-                        elif pat_timing == 2 and current_sequence != gifs_sequences['S5']:
+                        elif average >= threshold3 and pat_time < 1000 and pat_timing == 2 and current_sequence != gifs_sequences['S5']:
                             need_update_sequence = True
                             sequence_to_set = 'S5'
                         if pat_time >= 100 and current_sequence != gifs_sequences['S3']:
