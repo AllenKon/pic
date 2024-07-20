@@ -136,6 +136,8 @@ if __name__ == '__main__':
                         need_update_sequence = True
                 if current_sequence == gifs_sequences['S3']:
                     pat_time += 1
+                    print("Pat_time:")
+                    print(pat_time)
                 print(frame_count)
     except KeyboardInterrupt:
         print("Stopping program")
